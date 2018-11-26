@@ -1,0 +1,48 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+<style media="screen">
+  html, body {
+      overflow: hidden;
+      margin: 0;
+      padding: 0
+  }
+</style>
+<script type="text/javascript">
+  $(document).ready(function() {
+    App.canvas = App.cable.subscriptions.create("CanvasChannel", {
+      connected: function() {
+        console.log('I connected');
+        // Called when the subscription is ready for use on the server
+      },
+
+      disconnected: function() {
+        console.log('I disconnected');
+        // Called when the subscription has been terminated by the server
+      },
+
+      received: function(data) {
+        // Called when there's incoming data on the websocket for this channel
+        var user_info = data['user_info'];
+        if (getCookie('name') == user_info['name'])
+          return;
+        initializeSubscriber(user_info);
+        if (data['message'] == 'subscribed') {
+          // do nothing
+        }
+        else if (data['message'] == 'unsubscribed') {
+          removeDisconnectedSubscriber(user_info);
+        }
+        else if (data['message'] == 'move') {
+          var coordinates = data['coordinates'];
+          moveSubscriber(coordinates, user_info);
+        }
+      },
+
+      move: function(coordinates) {
+        return this.perform('move', { coordinates: coordinates });
+      }
+    });
+    $(document).mousemove(function(event){
+      App.canvas.move({ x: event.pageX, y: event.pageY });
+    });
+  });
+</script>
